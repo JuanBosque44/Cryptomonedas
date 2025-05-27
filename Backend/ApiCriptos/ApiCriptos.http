@@ -1,0 +1,6 @@
+@ApiCriptos_HostAddress = http://localhost:5095
+
+GET {{ApiCriptos_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

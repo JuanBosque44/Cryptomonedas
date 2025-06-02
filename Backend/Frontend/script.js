@@ -1,3 +1,7 @@
+const moneda = document.getElementById("selectmoneda")
+
+
+
 function ObtenerDatos(){
     fetch("https://criptoya.com/api/BTC/ARS/0") 
     .then(response => {
@@ -23,6 +27,7 @@ function ObtenerDatos(){
 
 function mostrarInfo(criptos) {
     const bodytabla = document.getElementById("tabla");
+    bodytabla.innerHTML = "";
 
     for (const exchange in criptos) {
         const tabla = document.createElement("tr");

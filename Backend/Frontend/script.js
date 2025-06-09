@@ -1,9 +1,31 @@
 const moneda = document.getElementById("selectmoneda")
-
+function CargarMonedas(){
+     if (document.title === "Inicio"){
+        fetch("https://localhost:7162/Crypto/ListarMoneda")
+    .then(response => {
+        if (!response.ok) {
+            alert(response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        moneda.innerHTML = ""
+        data.forEach(element => {
+            const opcion = document.createElement("option")
+            opcion.textContent = element.abrev
+            moneda.appendChild(opcion)
+        });
+        ObtenerDatos()
+    })
+    .catch(error => console.error("Error al obtener la informacion:", error));
+    }
+}
 
 
 function ObtenerDatos(){
-    fetch("https://criptoya.com/api/BTC/ARS/0") 
+   
+    var sel = moneda.value
+    fetch("https://criptoya.com/api/"+sel+"/ARS/0") 
     .then(response => {
         if (!response.ok) {
             alert(response.status);

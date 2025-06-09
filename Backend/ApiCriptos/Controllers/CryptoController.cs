@@ -1,6 +1,7 @@
 ﻿using ApiCriptos.Datos;
 using ApiCriptos.Modelos;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ApiCriptos.Controllers
 {
@@ -17,6 +18,7 @@ namespace ApiCriptos.Controllers
         [HttpPost("RealizarTrans")]
         public IActionResult Agregar(Transaccion transaccion)
         {
+            db.Add(transaccion);
             return Ok();
         }
 
@@ -29,7 +31,7 @@ namespace ApiCriptos.Controllers
         [HttpGet("ListarTransaccion")]
         public IActionResult ListarTransacciones()
         {
-            List<Transaccion> transacciones = new List<Transaccion>();
+            List<Transaccion> transacciones = db.Transaccion.Include(e=> e.Moneda).ToList();
             return Ok(transacciones);
         }
     }

@@ -1,7 +1,12 @@
 const moneda = document.getElementById("selectmoneda")
+const bodytabla = document.getElementById("tabla");
 function CargarMonedas(){
+    if (localStorage.getItem("User") === null && localStorage.getItem("Password") === null){
+        window.location.replace("Usuario.html")
+        IniciarSesion();
+    }
      if (document.title === "Inicio"){
-        fetch("https://localhost:7162/Crypto/ListarMoneda")
+        fetch("https://localhost:7162/Crypto/ListarCriptos")
     .then(response => {
         if (!response.ok) {
             alert(response.status);
@@ -12,12 +17,22 @@ function CargarMonedas(){
         moneda.innerHTML = ""
         data.forEach(element => {
             const opcion = document.createElement("option")
-            opcion.textContent = element.abrev
+            opcion.textContent = element.abreviatura
             moneda.appendChild(opcion)
         });
         ObtenerDatos()
     })
-    .catch(error => console.error("Error al obtener la informacion:", error));
+    .catch(error => {
+        console.error("Error al obtener la informacion:", error)
+        
+        const tabler = document.createElement("tr")
+        const errores = document.createElement("td")
+        errores.colSpan = 4
+        errores.textContent = "No hay datos disponibles"
+        tabler.appendChild(errores)
+        bodytabla.appendChild(tabler)
+    });
+    
     }
 }
 
@@ -48,8 +63,8 @@ function ObtenerDatos(){
 }
 
 function mostrarInfo(criptos) {
-    const bodytabla = document.getElementById("tabla");
-    bodytabla.innerHTML = "";
+/*     const bodytabla = document.getElementById("tabla");
+ */    bodytabla.innerHTML = "";
 
     for (const exchange in criptos) {
         const tabla = document.createElement("tr");
@@ -71,5 +86,32 @@ function mostrarInfo(criptos) {
         tabla.appendChild(fecha)
 
         bodytabla.appendChild(tabla);
+    }
+
+    if (criptos == null){
+        const tabler = document.createElement("tr")
+        const errores = document.createElement("td")
+        errores.colSpan = 4
+        errores.textContent = "No hay datos disponibles"
+    }
+}
+
+function IniciarSesion(){
+    const nombre = document.getElementById("NombreUsuario").value
+    const contrasena = document.getElementById("ContrasenaUsuario").value
+    var usuarioG = localStorage.getItem("User")
+    var contra = localStorage.getItem("Password")
+    if (nombre === null || contrasena === null){
+        alert("Ingrese los datos de inicio de sesion")
+    }
+    else{
+        if (usuarioG === null || usuarioG != nombre){
+            localStorage.setItem("User", nombre)
+            localStorage.setItem("Password", contrasena)
+            location.reload()
+        }
+        if (usuarioG === nombre && contra === contrasena){
+            window.location.assign("Inicio.html")
+        }
     }
 }

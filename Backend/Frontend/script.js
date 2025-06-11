@@ -1,12 +1,9 @@
 const moneda = document.getElementById("selectmoneda")
 const bodytabla = document.getElementById("tabla");
+const tablaTrans = document.getElementById("tablaTransacciones")
 function CargarMonedas(){
-    if (localStorage.getItem("User") === null && localStorage.getItem("Password") === null){
-        window.location.replace("Usuario.html")
-        IniciarSesion();
-    }
-     if (document.title === "Inicio"){
-        fetch("https://localhost:7162/Crypto/ListarCriptos")
+    VerificarSesion()
+    fetch("https://localhost:7162/Crypto/ListarCriptos")
     .then(response => {
         if (!response.ok) {
             alert(response.status);
@@ -23,19 +20,35 @@ function CargarMonedas(){
         ObtenerDatos()
     })
     .catch(error => {
-        console.error("Error al obtener la informacion:", error)
+        Errores(error)
+    });
+}
+
+function Errores(error){
+    console.error("Error al obtener la informacion:", error)
         
         const tabler = document.createElement("tr")
         const errores = document.createElement("td")
         errores.colSpan = 4
         errores.textContent = "No hay datos disponibles"
         tabler.appendChild(errores)
-        bodytabla.appendChild(tabler)
-    });
-    
-    }
+        if (document.title == "Inicio"){
+            bodytabla.appendChild(tabler)
+        }
+        else if (document.title == "Historial de movimientos"){
+            tablaTrans.appendChild(errores)
+        }
+        
 }
 
+function VerificarSesion(){
+    const usuario = localStorage.getItem("User")
+    const contra = localStorage.getItem("Password")
+    if (!usuario && !contra){
+        window.location.replace("Usuario.html")
+    }
+    console.log("Sesion iniciada")
+}
 
 function ObtenerDatos(){
    
@@ -44,14 +57,7 @@ function ObtenerDatos(){
     .then(response => {
         if (!response.ok) {
             alert(response.status);
-            if (document.title == "Inicio"){
-                const bodytabla = document.getElementById("tabla")
-                const tabla = document.createElement("tr")
-                const fila =  document.createElement("td")
-                fila.textContent = 'No hay datos disponibles';
-                tabla.appendChild(fila);
-                bodytabla.appendChild(tabla)
-            }
+            Errores(response.status)
         }
         return response.json();
     })
@@ -82,7 +88,7 @@ function mostrarInfo(criptos) {
         tabla.appendChild(venta);
 
         const fecha = document.createElement("td")
-        fecha.textContent = "27/05/2025"
+        fecha.textContent = new Date()
         tabla.appendChild(fecha)
 
         bodytabla.appendChild(tabla);
@@ -114,4 +120,44 @@ function IniciarSesion(){
             window.location.assign("Inicio.html")
         }
     }
+}
+
+function CargarTransacciones(){
+    VerificarSesion()
+    fetch("https://localhost:7162/Crypto/ListarTransaccion")
+    .then(response =>{
+        if(!response.ok){
+            alert(response.status);
+            Errores(response.status)
+        }
+        return response.json()
+    })
+    .then(data => {
+        const tablaTransaccion = document.getElementById("tablaTransacciones")
+        tablaTransaccion.innerHTML = ""
+        data.forEach(trans => {
+            const tabla = document.createElement("tr");
+
+            const nombre = document.createElement("td");
+            nombre.textContent = trans.accion;
+            tabla.appendChild(nombre);
+
+            const precio = document.createElement("td");
+            precio.textContent = trans.moneda.abreviatura;
+            tabla.appendChild(precio);
+
+            const venta = document.createElement("td");
+            venta.textContent = trans.monto;
+            tabla.appendChild(venta);
+
+            const fechas = document.createElement("td")
+            fechas.textContent = trans.fecha
+            tabla.appendChild(fechas)
+
+            tablaTrans.appendChild(tabla);
+        });
+    })
+    .catch(error =>{
+        Errores(error)
+    })
 }

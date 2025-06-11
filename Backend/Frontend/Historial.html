@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de movimientos</title>
 </head>
-<body>
+<body onload="CargarTransacciones()">
     <h1>Historial de movimientos</h1>
     <table>
         <thead>
             <tr>
                 <th>
-                    Criptomoneda
+                    Accion
                 </th>
                 <th>
-                    Accion
+                    Criptomoneda
                 </th>
                 <th>
                     Monto
@@ -24,7 +24,7 @@
                 </th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="tablaTransacciones">
 
         </tbody>
     </table>

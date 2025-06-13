@@ -1,6 +1,7 @@
-const moneda = document.getElementById("selectmoneda")
+const moneda = document.getElementsByClassName("selectmoneda")[0]
 const bodytabla = document.getElementById("tabla");
 const tablaTrans = document.getElementById("tablaTransacciones")
+var datos
 function CargarMonedas(){
     VerificarSesion()
     fetch("https://localhost:7162/Crypto/ListarCriptos")
@@ -14,10 +15,12 @@ function CargarMonedas(){
         moneda.innerHTML = ""
         data.forEach(element => {
             const opcion = document.createElement("option")
+            opcion.value = element.id
             opcion.textContent = element.abreviatura
+            opcion.setAttribute("data-abrev", element.abreviatura);
             moneda.appendChild(opcion)
         });
-        ObtenerDatos()
+        if (document.title == "Inicio")ObtenerDatos()
     })
     .catch(error => {
         Errores(error)
@@ -52,8 +55,9 @@ function VerificarSesion(){
 
 function ObtenerDatos(){
    
-    var sel = moneda.value
-    fetch("https://criptoya.com/api/"+sel+"/ARS/0") 
+    let selected = document.querySelector("#elegirMoneda option:checked");
+    let abrev = selected.getAttribute("data-abrev");
+    fetch("https://criptoya.com/api/"+abrev+"/ARS/0") 
     .then(response => {
         if (!response.ok) {
             alert(response.status);
@@ -62,9 +66,17 @@ function ObtenerDatos(){
         return response.json();
     })
     .then(data => {
-        mostrarInfo(data);
+        if (document.title == "Comprar moneda"){
+            RealizarTransaccion(data)
+        }
+        else{
+            mostrarInfo(data);        
+
+        }
     })
-    .catch(error => console.error("Error al obtener la informacion:", error));
+    .catch(error => {
+        Errores(error)
+    });
 
 }
 
@@ -160,4 +172,45 @@ function CargarTransacciones(){
     .catch(error =>{
         Errores(error)
     })
+}
+
+ function RealizarTransaccion(datos){
+    VerificarSesion() 
+    var moneda = document.getElementById("elegirMoneda").value
+    var cantidad = document.getElementById("cantidad").value
+    var accion = "Compra";
+    var montos = cantidad * datos.buenbit.totalAsk
+    if(!moneda || !cantidad || cantidad <= 0){
+        alert("No se han registrado datos validos")
+    }
+    else{
+        const nuevaTransaccion = {
+            Id:0,
+            Accion:accion,
+            Cantidad: Number(cantidad),
+            monto : parseFloat(montos.toFixed(2)),
+            Fecha: new Date().toISOString(),
+            MonedaId:parseInt(moneda)
+        }
+        console.log(JSON.stringify(nuevaTransaccion));
+
+        fetch("https://localhost:7162/Crypto/RealizarTrans",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body: JSON.stringify(nuevaTransaccion)
+        })
+        .then(response => {
+            if(!response.ok){
+                alert("No se ha podido concretar la transaccion")
+            }
+            else{
+                alert("Datos guardados")
+            }
+        })
+        .catch(error => {
+            Errores(error)
+        })
+    }
 }

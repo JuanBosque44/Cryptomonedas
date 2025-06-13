@@ -5,12 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comprar moneda</title>
 </head>
-<body>
+<body onload="CargarMonedas()">
     <h2>Comprar Criptomoneda</h2>
-    <form action="">
-        <select name="" id="selectmoneda"></select>
-        <input type="number">
-        <input type="submit">
-    </form>
+    
+    <div>
+        <label>Moneda</label>
+        <select name="" id="elegirMoneda" class="selectmoneda"></select>
+    </div>
+    <div>
+        <label>Cantidad</label>
+        <input type="number" id="cantidad">
+    </div>
+    <button onclick="ObtenerDatos()">Enviar</button>
+    
+<script src="script.js"></script>
 </body>
 </html>

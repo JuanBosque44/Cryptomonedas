@@ -19,6 +19,7 @@ namespace ApiCriptos.Controllers
         public IActionResult Agregar(Transaccion transaccion)
         {
             db.Add(transaccion);
+            db.SaveChanges();
             return Ok();
         }
 

@@ -4,27 +4,59 @@ const tablaTrans = document.getElementById("tablaTransacciones")
 var datos
 function CargarMonedas(){
     VerificarSesion()
-    fetch("https://localhost:7162/Crypto/ListarCriptos")
-    .then(response => {
-        if (!response.ok) {
-            alert(response.status);
-        }
-        return response.json();
-    })
-    .then(data => {
-        moneda.innerHTML = ""
-        data.forEach(element => {
-            const opcion = document.createElement("option")
-            opcion.value = element.id
-            opcion.textContent = element.abreviatura
-            opcion.setAttribute("data-abrev", element.abreviatura);
-            moneda.appendChild(opcion)
+    var accionSeleccionada
+    if(document.title == "Transacciones") accionSeleccionada = document.getElementById("elegirAccion").value 
+    else accionSeleccionada = "Compra"
+    if (accionSeleccionada == "Venta"){
+        fetch("https://localhost:7162/Crypto/ListarTransaccion")
+        .then(response => {
+            if (!response.ok) {
+                alert(response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            moneda.innerHTML = ""
+            data.forEach(element => {
+                if(element.accion == "Compra"){
+                    const opcion = document.createElement("option")
+                    opcion.value = element.monedaId
+                    opcion.textContent = element.moneda.abreviatura
+                    opcion.setAttribute("data-abrev", element.moneda.abreviatura);
+                    opcion.setAttribute("data-cantidad", element.cantidad)
+
+                    moneda.appendChild(opcion)
+                }               
+            })
+        })
+        .catch(error => {
+            Errores(error)
         });
-        if (document.title == "Inicio")ObtenerDatos()
-    })
-    .catch(error => {
-        Errores(error)
-    });
+    }
+    else{
+        fetch("https://localhost:7162/Crypto/ListarCriptos")
+        .then(response => {
+            if (!response.ok) {
+                alert(response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            moneda.innerHTML = ""
+            data.forEach(element => {
+                const opcion = document.createElement("option")
+                opcion.value = element.id
+                opcion.textContent = element.abreviatura
+                opcion.setAttribute("data-abrev", element.abreviatura);
+                moneda.appendChild(opcion)
+            });
+            if (document.title == "Inicio")ObtenerDatos()
+        })
+        .catch(error => {
+            Errores(error)
+        });
+    }
+    
 }
 
 function Errores(error){
@@ -55,7 +87,7 @@ function VerificarSesion(){
 
 function ObtenerDatos(){
    
-    let selected = document.querySelector("#elegirMoneda option:checked");
+    let selected = document.querySelector(".selectmoneda option:checked");
     let abrev = selected.getAttribute("data-abrev");
     fetch("https://criptoya.com/api/"+abrev+"/ARS/0") 
     .then(response => {
@@ -66,7 +98,7 @@ function ObtenerDatos(){
         return response.json();
     })
     .then(data => {
-        if (document.title == "Comprar moneda"){
+        if (document.title == "Transacciones"){
             RealizarTransaccion(data)
         }
         else{
@@ -104,13 +136,6 @@ function mostrarInfo(criptos) {
         tabla.appendChild(fecha)
 
         bodytabla.appendChild(tabla);
-    }
-
-    if (criptos == null){
-        const tabler = document.createElement("tr")
-        const errores = document.createElement("td")
-        errores.colSpan = 4
-        errores.textContent = "No hay datos disponibles"
     }
 }
 
@@ -158,12 +183,18 @@ function CargarTransacciones(){
             precio.textContent = trans.moneda.abreviatura;
             tabla.appendChild(precio);
 
+            const cantidad = document.createElement("td");
+            cantidad.textContent = trans.cantidad;
+            tabla.appendChild(cantidad);
+
             const venta = document.createElement("td");
             venta.textContent = trans.monto;
             tabla.appendChild(venta);
 
             const fechas = document.createElement("td")
-            fechas.textContent = trans.fecha
+            var fechaRecibida = new Date(trans.fecha)
+            fechaCorta = fechaRecibida.toISOString()
+            fechas.textContent = fechaCorta.slice(0,10)
             tabla.appendChild(fechas)
 
             tablaTrans.appendChild(tabla);
@@ -175,42 +206,60 @@ function CargarTransacciones(){
 }
 
  function RealizarTransaccion(datos){
-    VerificarSesion() 
+    var accion = document.getElementById("elegirAccion").value
     var moneda = document.getElementById("elegirMoneda").value
+    var selected = document.querySelector(".selectmoneda option:checked");
+    var cantidadMoneda = selected.getAttribute("data-cantidad");
     var cantidad = document.getElementById("cantidad").value
-    var accion = "Compra";
-    var montos = cantidad * datos.buenbit.totalAsk
-    if(!moneda || !cantidad || cantidad <= 0){
-        alert("No se han registrado datos validos")
-    }
-    else{
-        const nuevaTransaccion = {
-            Id:0,
-            Accion:accion,
-            Cantidad: Number(cantidad),
-            monto : parseFloat(montos.toFixed(2)),
-            Fecha: new Date().toISOString(),
-            MonedaId:parseInt(moneda)
+    //a partir de aqui valida si es compra o venta
+    if (accion == "Compra"){
+        var montos = cantidad * datos.buenbit.totalAsk
+        if(!moneda || !cantidad || cantidad <= 0){
+            alert("No se han registrado datos validos")
         }
-        console.log(JSON.stringify(nuevaTransaccion));
-
-        fetch("https://localhost:7162/Crypto/RealizarTrans",{
-            method:"POST",
-            headers:{
-                "Content-Type":"application/json"
-            },
-            body: JSON.stringify(nuevaTransaccion)
-        })
-        .then(response => {
-            if(!response.ok){
-                alert("No se ha podido concretar la transaccion")
-            }
-            else{
-                alert("Datos guardados")
-            }
-        })
-        .catch(error => {
-            Errores(error)
-        })
+        else{
+            EjecutarTransaccion(accion, cantidad, montos, moneda)
+        }
     }
+    else if (accion == "Venta"){
+        if (!cantidad || cantidad > cantidadMoneda || cantidad <= 0){
+            alert("No se han registrado datos validos")
+        }
+        else{
+            var montos = cantidad * datos.buenbit.totalBid
+            EjecutarTransaccion(accion, cantidad, montos, moneda)
+        }
+    }
+    
+}
+
+function EjecutarTransaccion(accion, cantidad, montos, moneda){
+    const nuevaTransaccion = {
+                Id:0,
+                Accion:accion,
+                Cantidad: Number(cantidad),
+                monto : parseFloat(montos.toFixed(2)),
+                Fecha: new Date().toISOString(),
+                MonedaId:parseInt(moneda)
+            }
+            console.log(JSON.stringify(nuevaTransaccion));
+
+            fetch("https://localhost:7162/Crypto/RealizarTrans",{
+                method:"POST",
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                body: JSON.stringify(nuevaTransaccion)
+            })
+            .then(response => {
+                if(!response.ok){
+                    alert("No se ha podido concretar la transaccion: " + response.status)
+                }
+                else{
+                    alert("Datos guardados")
+                }
+            })
+            .catch(error => {
+                Errores(error)
+            })
 }

@@ -1,7 +1,7 @@
 const moneda = document.getElementsByClassName("selectmoneda")[0]
 const bodytabla = document.getElementById("tabla");
 const tablaTrans = document.getElementById("tablaTransacciones")
-var saldo = 1000000
+var saldo
 var datos
 
 function Inicio(){
@@ -349,4 +349,12 @@ function EjecutarTransaccion(accion, cantidad, montos, moneda){
             .catch(error => {
                 Errores(error)
             })
+}
+
+function MostrarSaldo(){
+    const nav = document.getElementById("navegar")
+    const saldo = document.getElementById("sald")
+    saldo.textContent = "Saldo: $"+localStorage.getItem("Saldo")
+    if(document.title== "Inicio") Inicio()
+    else if (document.title== "Transacciones") CargarMonedas()
 }

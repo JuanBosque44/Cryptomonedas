@@ -1,7 +1,88 @@
 const moneda = document.getElementsByClassName("selectmoneda")[0]
 const bodytabla = document.getElementById("tabla");
 const tablaTrans = document.getElementById("tablaTransacciones")
+var saldo = 1000000
 var datos
+
+function Inicio(){
+    VerificarSesion()
+    fetch("https://localhost:7162/Crypto/ListarTransaccion")
+    .then(response => {
+        if (!response.ok){
+            alert(response.status)
+        }
+        return response.json();
+    })
+    .then(data => {
+            //primera tabla: Mis inversiones
+            const tablaMisInversiones = document.getElementById("MisInversiones");
+            tablaMisInversiones.innerHTML = "";
+            const abreviaciones = {};
+            data.forEach(trans => {
+                const abrev = trans.moneda.abreviatura;
+                if (!abreviaciones[abrev]) {
+                    abreviaciones[abrev] = {
+                        cantidad: 0,
+                        monto: 0
+                    };
+                }
+                if (trans.accion == "Compra") {
+                    abreviaciones[abrev].cantidad += trans.cantidad;
+                    abreviaciones[abrev].monto += trans.monto;
+                } else if (trans.accion == "Venta") {
+                    abreviaciones[abrev].cantidad -= trans.cantidad;
+                    abreviaciones[abrev].monto -= trans.monto;
+                }
+            });
+            for (const abrev in abreviaciones) {
+                const fila = document.createElement("tr");
+                const MonedaAbreviada = document.createElement("td");
+                MonedaAbreviada.textContent = abrev;
+                fila.appendChild(MonedaAbreviada);
+                const CantidadMoneda = document.createElement("td");
+                CantidadMoneda.textContent = abreviaciones[abrev].cantidad.toFixed(4); 
+                fila.appendChild(CantidadMoneda);
+                const MontoMoneda = document.createElement("td");
+                MontoMoneda.textContent = abreviaciones[abrev].monto.toFixed(2);
+                fila.appendChild(MontoMoneda);
+                tablaMisInversiones.appendChild(fila);
+            }
+            //segunda tabla: Saldos
+            const tablaSaldos = document.getElementById("Saldos")
+            var comprasTotales = 0
+            var ventasTotales = 0
+            data.forEach(elm => {
+                if (elm.accion == "Compra"){
+                    comprasTotales += elm.monto
+                }
+                else if (elm.accion == "Venta"){
+                    ventasTotales += elm.monto
+                }
+            })
+            const fila = document.createElement("tr")
+            const Inversion = document.createElement("td")
+            var inv = comprasTotales - ventasTotales
+            Inversion.textContent = inv.toFixed(2)
+            fila.appendChild(Inversion)
+            const disponible = document.createElement("td")
+            var disp = ventasTotales + saldo
+            disponible.textContent = disp.toFixed(2)
+            fila.appendChild(disponible)
+            const Total = document.createElement("td")
+            var tot = inv + ventasTotales + saldo
+            Total.textContent = tot.toFixed(2)
+            fila.appendChild(Total)
+            tablaSaldos.appendChild(fila)
+            
+            CargarMonedas()
+        })
+        .catch(error => {
+            Errores(error);
+        });
+}
+
+
+
 function CargarMonedas(){
     VerificarSesion()
     var accionSeleccionada
@@ -132,7 +213,9 @@ function mostrarInfo(criptos) {
         tabla.appendChild(venta);
 
         const fecha = document.createElement("td")
-        fecha.textContent = new Date()
+        var fechaRecibida = new Date()
+        fechaCorta = fechaRecibida.toISOString()
+        fecha.textContent = fechaCorta.slice(0,16)        
         tabla.appendChild(fecha)
 
         bodytabla.appendChild(tabla);
@@ -194,7 +277,7 @@ function CargarTransacciones(){
             const fechas = document.createElement("td")
             var fechaRecibida = new Date(trans.fecha)
             fechaCorta = fechaRecibida.toISOString()
-            fechas.textContent = fechaCorta.slice(0,10)
+            fechas.textContent = fechaCorta.slice(0,16)
             tabla.appendChild(fechas)
 
             tablaTrans.appendChild(tabla);
@@ -214,11 +297,13 @@ function CargarTransacciones(){
     //a partir de aqui valida si es compra o venta
     if (accion == "Compra"){
         var montos = cantidad * datos.buenbit.totalAsk
-        if(!moneda || !cantidad || cantidad <= 0){
+        if(!moneda || !cantidad || cantidad <= 0 || montos > saldo){
             alert("No se han registrado datos validos")
         }
         else{
             EjecutarTransaccion(accion, cantidad, montos, moneda)
+            saldo -= montos
+            localStorage.setItem("Saldo", saldo)
         }
     }
     else if (accion == "Venta"){
@@ -228,6 +313,8 @@ function CargarTransacciones(){
         else{
             var montos = cantidad * datos.buenbit.totalBid
             EjecutarTransaccion(accion, cantidad, montos, moneda)
+            saldo += montos
+            localStorage.setItem("Saldo", saldo)
         }
     }
     

@@ -14,14 +14,45 @@
         <a class="links" href="Usuario.html">Mi perfil</a>
     </nav>
 </header>
-<body onload="CargarMonedas()" >
-    <h1>Criptomonedas</h1>
+<body onload="Inicio()" >
+    <h1>Inicio</h1>
+    <h2>Mis inversiones</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>
+                    Moneda
+                </th>
+                <th>
+                    Cantidad
+                </th>
+                <th>
+                    Valor
+                </th>
+            </tr>
+        </thead>
+        <tbody id="MisInversiones">
+
+        </tbody>
+    </table>
+    <h2>Saldo</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Invertido</th>
+                <th>Disponible</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody id="Saldos"></tbody>
+    </table>
+    <h2>Criptomonedas</h2>
     <select name="" class="selectmoneda" onchange="ObtenerDatos()"></select>
     <table>
         <thead>
             <tr>
                 <th>
-                    Bancos de cambio
+                    Exchanges
                 </th>
                 <th>
                     Precio de compra

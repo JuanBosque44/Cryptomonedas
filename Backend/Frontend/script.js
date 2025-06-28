@@ -1,7 +1,7 @@
 const moneda = document.getElementsByClassName("selectmoneda")[0]
 const bodytabla = document.getElementById("tabla");
 const tablaTrans = document.getElementById("tablaTransacciones")
-var saldo
+var saldo = Number(localStorage.getItem("Saldo"))
 var datos
 
 function Inicio(){
@@ -88,6 +88,7 @@ function CargarMonedas(){
     var accionSeleccionada
     if(document.title == "Transacciones") accionSeleccionada = document.getElementById("elegirAccion").value 
     else accionSeleccionada = "Compra"
+    //rellena el select con todas las monedas disponibles para vender
     if (accionSeleccionada == "Venta"){
         fetch("https://localhost:7162/Crypto/ListarTransaccion")
         .then(response => {
@@ -114,6 +115,7 @@ function CargarMonedas(){
             Errores(error)
         });
     }
+    //rellena el select con todas las monedas disponibles para comprar
     else{
         fetch("https://localhost:7162/Crypto/ListarCriptos")
         .then(response => {
@@ -145,14 +147,17 @@ function Errores(error){
         
         const tabler = document.createElement("tr")
         const errores = document.createElement("td")
+        const errorOpciones = document.createElement("option")
         errores.colSpan = 4
         errores.textContent = "No hay datos disponibles"
+        errorOpciones.textContent = "Sin datos"
         tabler.appendChild(errores)
         if (document.title == "Inicio"){
             bodytabla.appendChild(tabler)
+            moneda.appendChild(errorOpciones)
         }
         else if (document.title == "Historial de movimientos"){
-            tablaTrans.appendChild(errores)
+            tablaTrans.appendChild(tabler)
         }
         
 }
@@ -352,9 +357,15 @@ function EjecutarTransaccion(accion, cantidad, montos, moneda){
 }
 
 function MostrarSaldo(){
-    const nav = document.getElementById("navegar")
-    const saldo = document.getElementById("sald")
-    saldo.textContent = "Saldo: $"+localStorage.getItem("Saldo")
+
+    if (!saldo){
+        const saldo = document.getElementById("sald")
+        saldo.textContent = "Saldo: $0"
+    }
+    else{
+        const saldo = document.getElementById("sald")
+        saldo.textContent = "Saldo: $"+localStorage.getItem("Saldo")
+    }
     if(document.title== "Inicio") Inicio()
     else if (document.title== "Transacciones") CargarMonedas()
 }

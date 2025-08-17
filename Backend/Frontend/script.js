@@ -2,7 +2,8 @@ const moneda = document.getElementsByClassName("selectmoneda")[0]
 const bodytabla = document.getElementById("tabla");
 const tablaTrans = document.getElementById("tablaTransacciones")
 var saldo = Number(localStorage.getItem("Saldo"))
-var datos
+var datos;
+var montosDeCadaMoneda = {}
 
 function Inicio(){
     VerificarSesion()
@@ -15,6 +16,7 @@ function Inicio(){
     })
     .then(data => {
             //primera tabla: Mis inversiones
+            let contador = 0;
             const tablaMisInversiones = document.getElementById("MisInversiones");
             tablaMisInversiones.innerHTML = "";
             const abreviaciones = {};
@@ -35,17 +37,23 @@ function Inicio(){
                 }
             });
             for (const abrev in abreviaciones) {
+                
                 const fila = document.createElement("tr");
                 const MonedaAbreviada = document.createElement("td");
                 MonedaAbreviada.textContent = abrev;
                 fila.appendChild(MonedaAbreviada);
+
                 const CantidadMoneda = document.createElement("td");
                 CantidadMoneda.textContent = abreviaciones[abrev].cantidad.toFixed(4); 
                 fila.appendChild(CantidadMoneda);
+
                 const MontoMoneda = document.createElement("td");
-                MontoMoneda.textContent = abreviaciones[abrev].monto.toFixed(2);
+                let monto = parseFloat(abreviaciones[abrev].monto.toFixed(2))
+                montosDeCadaMoneda[contador] = monto
+                MontoMoneda.textContent = monto;
                 fila.appendChild(MontoMoneda);
                 tablaMisInversiones.appendChild(fila);
+                contador++;
             }
             //segunda tabla: Saldos
             const tablaSaldos = document.getElementById("Saldos")
@@ -64,16 +72,18 @@ function Inicio(){
             var inv = comprasTotales - ventasTotales
             Inversion.textContent = inv.toFixed(2)
             fila.appendChild(Inversion)
+
             const disponible = document.createElement("td")
             var disp = ventasTotales + saldo
             disponible.textContent = disp.toFixed(2)
             fila.appendChild(disponible)
+
             const Total = document.createElement("td")
             var tot = inv + ventasTotales + saldo
             Total.textContent = tot.toFixed(2)
             fila.appendChild(Total)
             tablaSaldos.appendChild(fila)
-            
+            drawChart()
             CargarMonedas()
         })
         .catch(error => {
@@ -199,8 +209,7 @@ function ObtenerDatos(){
 }
 
 function mostrarInfo(criptos) {
-/*     const bodytabla = document.getElementById("tabla");
- */    bodytabla.innerHTML = "";
+    bodytabla.innerHTML = "";
 
     for (const exchange in criptos) {
         const tabla = document.createElement("tr");
@@ -232,7 +241,8 @@ function IniciarSesion(){
     const contrasena = document.getElementById("ContrasenaUsuario").value
     var usuarioG = localStorage.getItem("User")
     var contra = localStorage.getItem("Password")
-    if (nombre === null || contrasena === null){
+
+    if (!nombre || !contrasena){
         alert("Ingrese los datos de inicio de sesion")
     }
     else{
@@ -243,6 +253,9 @@ function IniciarSesion(){
         }
         if (usuarioG === nombre && contra === contrasena){
             window.location.assign("Inicio.html")
+        }
+        else{
+            alert("Nombre de usuario o contraseña incorrectos")
         }
     }
 }
@@ -369,3 +382,31 @@ function MostrarSaldo(){
     if(document.title== "Inicio") Inicio()
     else if (document.title== "Transacciones") CargarMonedas()
 }
+
+function EliminarSesion(){
+    localStorage.setItem("Password", "")
+    localStorage.setItem("User", "")
+}
+
+//a partir de aqui es código para generar los gráficos
+
+  google.charts.load('current', {packages: ['corechart']});
+  google.charts.setOnLoadCallback(drawChart);
+
+  function drawChart() {
+    console.log(montosDeCadaMoneda)
+    const data = google.visualization.arrayToDataTable([
+        
+      ['Mes', 'Ventas'],
+      ['BTC', montosDeCadaMoneda[0]],
+      ['ETH', montosDeCadaMoneda[1]],
+      ['USDC', montosDeCadaMoneda[2]],
+    ]);
+
+    const options = {
+      title: 'Inversiones',
+    };
+
+    const chart = new google.visualization.PieChart(document.getElementById('grafico_div'));
+    chart.draw(data, options);
+  }
